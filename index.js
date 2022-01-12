@@ -1,13 +1,31 @@
 const express = require('express');
 const cors = require('cors');
-const Users = require('./firebase-config');
+const admin = require("firebase-admin");
+const dotenv = require('dotenv');
 
-const PORT = 8080;
+const serviceAccount = require('./provateKey/mtree-cf9b0-firebase-adminsdk-jo88o-962fce3b96.json');
+
+dotenv.config();
 
 const app = express();
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: process.env.DATABASE_URL,
+    apiKey: process.env.API_KEY,
+    authDomain: process.env.AUTH_DOMAIN,
+    projectId: process.env.PROJECT_ID,
+    storageBucket: process.env.STORAGE_BUCKET,
+    messagingSenderId: process.env.MESSAGING_SENDER_ID,
+    appId: process.env.APP_ID,
+    measurementId: process.env.MEASUREMENT_ID
+});
+
+const db = admin.firestore()
+const Users = db.collection("Users")
 
 app.post('/createUser', (req,res) => {
     const data = req.body;
@@ -15,10 +33,10 @@ app.post('/createUser', (req,res) => {
             res.send(`your data is ${JSON.stringify(data)}`)
     }).catch(err => {
         console.log(err);
-        res.send('fail')
+        res.send('fail');
     })
 })
 
-app.listen(PORT, () => {
-    console.log(`this api is running on port ${PORT}`)
+app.listen(port, () => {
+    console.log(`this api is running on port ${port}`)
 })
