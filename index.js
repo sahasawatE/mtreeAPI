@@ -1,50 +1,75 @@
 const express = require('express');
 const cors = require('cors');
-const admin = require("firebase-admin");
 const dotenv = require('dotenv');
-
-const serviceAccount = require('./privateKey/mtree-cf9b0-firebase-adminsdk-jo88o-962fce3b96.json');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const config = require('./config');
+const verify = require('./verifyToken');
+const Users = require('./Routes/Users');
+const Products = require('./Routes/Products');
 
 dotenv.config();
 
 const app = express();
+const users = config.collection("Users");
 const port = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: process.env.DATABASE_URL,
-    apiKey: process.env.API_KEY,
-    authDomain: process.env.AUTH_DOMAIN,
-    projectId: process.env.PROJECT_ID,
-    storageBucket: process.env.STORAGE_BUCKET,
-    messagingSenderId: process.env.MESSAGING_SENDER_ID,
-    appId: process.env.APP_ID,
-    measurementId: process.env.MEASUREMENT_ID
-});
 
-const db = admin.firestore()
-const Users = db.collection("Users");
-const Products = db.collection("Products")
+function generateAccessToken(id) {
+    return jwt.sign({ _id: id }, process.env.SALT, { expiresIn: "24h" });
+}
 
-app.post('/createUser', (req,res) => {
-    const data = req.body;
-    Users.add({data}).then(() => {
-            res.send(`your data is ${JSON.stringify(data)}`)
+app.use('/Users', verify, Users);
+app.use('/Products', verify, Products);
+
+app.post('/register', async (req, res) => {
+    const userId = req.body.User_id;
+    const userPassword = req.body.User_password;
+
+    //Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(userPassword, salt);
+
+    users.add({
+        user_id: userId,
+        user_password: hashPassword
+    }).then(() => {
+        res.send(`register is completed as ${userId}`)
     }).catch(err => {
         console.log(err);
-        res.send('fail');
+        res.send('create user failed');
     })
 })
 
-app.post('/createProduct', (req,res) => {
-    const data = req.body;
-    Products.add({data}).then(() => {
-        res.send(`your data is ${JSON.stringify(data)}`)
+app.post('/login',(req,res) => {
+    const userId = req.body.User_id;
+    const userPassword = req.body.User_password;
+    var queryUser = [];
+
+    users.where("user_id", "==", userId).get()
+    .then(async (result) => {
+        if(result.empty){
+            res.send('no user is found')
+        }
+        else{
+            queryUser = result.docs.map(doc => {
+                return { id: doc.id, ...doc.data() }
+            })
+            const validatePassword = await bcrypt.compare(userPassword, queryUser[0].user_password);
+            if (!validatePassword) {
+                res.send('fail to login');
+            }
+            else {
+                //create and assign token
+                const token = generateAccessToken(queryUser[0].user_id);
+                res.header("auth-token", token).send(token);
+            } 
+        }
     }).catch(err => {
         console.log(err);
-        res.send('fail');
+        res.send('login failed')
     })
 })
 
