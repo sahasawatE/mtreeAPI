@@ -9,7 +9,6 @@ firebase-debug.*.log*
 
 # Firebase cache
 .firebase/
-.env
 
 # Firebase config
 
@@ -47,6 +46,7 @@ build/Release
 
 # Dependency directories
 node_modules/
+privateKey/
 
 # Optional npm cache directory
 .npm

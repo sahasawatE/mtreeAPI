@@ -3,7 +3,7 @@ const cors = require('cors');
 const admin = require("firebase-admin");
 const dotenv = require('dotenv');
 
-const serviceAccount = require('./provateKey/mtree-cf9b0-firebase-adminsdk-jo88o-962fce3b96.json');
+const serviceAccount = require('./privateKey/mtree-cf9b0-firebase-adminsdk-jo88o-962fce3b96.json');
 
 dotenv.config();
 
@@ -25,12 +25,23 @@ admin.initializeApp({
 });
 
 const db = admin.firestore()
-const Users = db.collection("Users")
+const Users = db.collection("Users");
+const Products = db.collection("Products")
 
 app.post('/createUser', (req,res) => {
     const data = req.body;
     Users.add({data}).then(() => {
             res.send(`your data is ${JSON.stringify(data)}`)
+    }).catch(err => {
+        console.log(err);
+        res.send('fail');
+    })
+})
+
+app.post('/createProduct', (req,res) => {
+    const data = req.body;
+    Products.add({data}).then(() => {
+        res.send(`your data is ${JSON.stringify(data)}`)
     }).catch(err => {
         console.log(err);
         res.send('fail');
