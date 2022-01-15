@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const dotenv = require('dotenv');
 
-const serviceAccount = require('./privateKey/mtree-cf9b0-firebase-adminsdk-jo88o-962fce3b96.json');
+const serviceAccount = require('./privateKey/mtree-cf9b0-firebase-adminsdk-jo88o-b173c053ff.json');
 
 dotenv.config();
 
