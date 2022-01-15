@@ -15,10 +15,84 @@ productsRoute.get("/", (req, res) => {
     });
 });
 
+productsRoute.get("/queryByUserId",(req,res) => {
+    const userId = req.body.userId;
+    products.where("userId", "==", userId).get()
+    .then((result) => {
+        res.send(result.docs.map(doc => {
+            return {id: doc.id, ...doc.data()}
+        }))
+    })
+    .catch(err => {
+        console.log(err);
+        res.send('faile to query a product');
+    })
+})
+
+function filterQueryDataFromTags(queryData,tags){
+    if(tags){
+        if (tags.length <= 1) {
+            return(queryData)
+        }
+        else {
+            return(queryData.map(v => {
+                if (v.tag.includes(tags[tags.length - 1])) {
+                    return filterQueryDataFromTags(v, tags.filter(e => e !== tags[tags.length - 1]))
+                }
+            }))
+        }
+    }
+    else{
+        return (queryData)
+    }
+}
+
+productsRoute.get('/queryByTags',async (req,res) => {
+    const tags = req.body.tag;
+    var queryData = [];
+    if(tags.length > 0) {
+        const query = new Promise((resolve, reject) => {
+            products.where("tag", "array-contains", tags[tags.length - 1]).get()
+                .then(result => resolve(result.docs.map(doc => {
+                    return {id: doc.id, ...doc.data()}
+                })))
+                .catch(err => reject(err))
+        })
+
+        await query.then(d => {
+            d.map(v => {
+                queryData.push(v)
+            })
+        }).catch(err => console.log(err))
+
+        await tags.pop()
+
+        if(queryData.length === 1){
+            res.send(queryData)
+        }
+        else{
+            res.send(filterQueryDataFromTags(queryData, tags))
+        }
+    }
+    else{
+        res.send('empty tags list')
+    }
+})
+
 productsRoute.post('/createProduct', (req, res) => {
-    const data = req.body;
-    products.add({ data }).then(() => {
-        res.send(`your data is ${JSON.stringify(data)}`)
+    const userId = req.body.userId;
+    const productname = req.body.product_name;
+    const updateDate = req.body.update_date;
+    const price = req.body.price;
+    const tag = req.body.tag; //get list of tags
+    products.add({
+        userId: userId,
+        product_name : productname,
+        update_date : updateDate,
+        price: price,
+        tag: tag
+    }).then(() => {
+        res.send(`your product is uploaded. User id is ${JSON.stringify(userId)}`)
     }).catch(err => {
         console.log(err);
         res.send('fail');
