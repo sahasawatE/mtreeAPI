@@ -82,7 +82,7 @@ productsRoute.get('/queryByTags',async (req,res) => {
         }
         else{
             if (filterQueryDataFromTags(queryData, tags) !== 'empty'){
-                res.send(filterQueryDataFromTags(queryData, tags).filter(e => e !== undefined))
+                res.send(filterQueryDataFromTags(queryData, tags).filter(e => e !== undefined && e !== 'empty' && e !== null))
             }
             else{
                 res.send('empty results')
@@ -111,6 +111,16 @@ productsRoute.post('/createProduct', (req, res) => {
     }).catch(err => {
         console.log(err);
         res.send('fail');
+    })
+})
+
+productsRoute.delete('/deleteProduct',(req,res) => {
+    const id = req.body.id;
+    products.doc(id).delete().then(() => {
+        res.send(`${JSON.stringify(id)} has been deleted`)
+    }).catch(err => {
+        console.log(err);
+        res.send('delete product failed');
     })
 })
 

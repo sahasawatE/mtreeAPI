@@ -1,4 +1,5 @@
 const express = require('express');
+const admin = require('firebase-admin');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
@@ -11,6 +12,7 @@ const Products = require('./Routes/Products');
 dotenv.config();
 
 const app = express();
+const auth = admin.auth()
 const users = config.collection("Users");
 const port = process.env.PORT;
 
@@ -24,8 +26,9 @@ function generateAccessToken(id) {
 app.use('/Users', verify, Users);
 app.use('/Products', verify, Products);
 
-app.post('/register', async (req, res) => {
-    const userId = req.body.User_id;
+app.post('/register',async (req,res) => {
+    const userId = req.body.User_id; //username or user display name
+    const userEmail = req.body.User_email;
     const userPassword = req.body.User_password;
 
     //Hash password
@@ -34,9 +37,18 @@ app.post('/register', async (req, res) => {
 
     users.add({
         user_id: userId,
+        user_email: userEmail,
         user_password: hashPassword
     }).then(() => {
-        res.send(`register is completed as ${userId}`)
+        auth.createUser({
+            uid: userId,
+            email : userEmail,
+            password: hashPassword
+        }).then(() => {
+            res.send(`register is completed as ${userId}`)
+        }).catch(err2 => {
+            console.log(err2);
+        })
     }).catch(err => {
         console.log(err);
         res.send('create user failed');
@@ -44,11 +56,11 @@ app.post('/register', async (req, res) => {
 })
 
 app.post('/login',(req,res) => {
-    const userId = req.body.User_id;
+    const userEmail = req.body.User_email; //login with email only
     const userPassword = req.body.User_password;
     var queryUser = [];
 
-    users.where("user_id", "==", userId).get()
+    users.where("user_email", "==", userEmail).get()
     .then(async (result) => {
         if(result.empty){
             res.send('no user is found')
