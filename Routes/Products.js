@@ -30,25 +30,35 @@ productsRoute.get("/queryByUserId",(req,res) => {
 })
 
 function filterQueryDataFromTags(queryData,tags){
-    if(tags){
-        if (tags.length <= 1) {
-            return(queryData)
-        }
-        else {
-            return(queryData.map(v => {
-                if (v.tag.includes(tags[tags.length - 1])) {
-                    return filterQueryDataFromTags(v, tags.filter(e => e !== tags[tags.length - 1]))
+    if(tags.length !== 0){
+        if(queryData.length > 1){
+            return (queryData.map(v => {
+                if (v.tag.includes(tags[0])) {
+                    return filterQueryDataFromTags(v, tags.filter(e => e !== tags[0]))
                 }
             }))
         }
+        else{
+            if(queryData.length !== 0){
+                if (queryData.tag.includes(tags[0])) {
+                    return (queryData)
+                }
+                else {
+                    return ('empty')
+                }
+            }
+            else{
+                return ('empty')
+            }
+        }
     }
     else{
-        return (queryData)
+        return(queryData)
     }
 }
 
 productsRoute.get('/queryByTags',async (req,res) => {
-    const tags = req.body.tag;
+    const tags = req.body.tag; //get list of tags
     var queryData = [];
     if(tags.length > 0) {
         const query = new Promise((resolve, reject) => {
@@ -67,11 +77,16 @@ productsRoute.get('/queryByTags',async (req,res) => {
 
         await tags.pop()
 
-        if(queryData.length === 1){
+        if(tags.length === 0){
             res.send(queryData)
         }
         else{
-            res.send(filterQueryDataFromTags(queryData, tags))
+            if (filterQueryDataFromTags(queryData, tags) !== 'empty'){
+                res.send(filterQueryDataFromTags(queryData, tags).filter(e => e !== undefined))
+            }
+            else{
+                res.send('empty results')
+            }
         }
     }
     else{
