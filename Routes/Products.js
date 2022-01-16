@@ -17,6 +17,7 @@ productsRoute.get("/", (req, res) => {
 
 productsRoute.get("/queryByUserId",(req,res) => {
     const userId = req.body.userId;
+    console.log(userId)
     products.where("userId", "==", userId).get()
     .then((result) => {
         res.send(result.docs.map(doc => {
