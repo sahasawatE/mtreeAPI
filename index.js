@@ -7,6 +7,7 @@ const config = require('./config');
 const verify = require('./verifyToken');
 const Users = require('./Routes/Users');
 const Products = require('./Routes/Products');
+const Chats = require('./Routes/Chats')
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ function generateAccessToken(id) {
 
 app.use('/Users', verify, Users);
 app.use('/Products', verify, Products);
+app.use('/Chats', verify, Chats)
 
 app.post('/register', async (req, res) => {
     const userId = req.body.User_id;
