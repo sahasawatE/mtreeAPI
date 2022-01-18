@@ -58,4 +58,6 @@ async function createArrayFromResult(result) {
 
 
 //post
+
+route.post
 module.exports = route;
