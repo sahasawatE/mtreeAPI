@@ -5,7 +5,7 @@ const serviceAccount = require('./privateKey/mtree-cf9b0-firebase-adminsdk-jo88o
 
 dotenv.config();
 
-admin.initializeApp({
+const config = {
     credential: admin.credential.cert(serviceAccount),
     databaseURL: process.env.DATABASE_URL,
     apiKey: process.env.API_KEY,
@@ -15,7 +15,9 @@ admin.initializeApp({
     messagingSenderId: process.env.MESSAGING_SENDER_ID,
     appId: process.env.APP_ID,
     measurementId: process.env.MEASUREMENT_ID
-});
+}
+
+admin.initializeApp(config);
 
 const db = admin.firestore();
 

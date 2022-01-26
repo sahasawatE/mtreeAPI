@@ -15,6 +15,11 @@ usersRoute.get("/", (req, res) => {
     });
 });
 
+// usersRoute.post('/updateUserAppearance', (req,res) => {
+//     const id = req.body.id;
+    
+// })
+
 usersRoute.delete('/deleteUser', (req,res) => {
     const id = req.body.id;
     users.doc(id).delete().then(() => {
